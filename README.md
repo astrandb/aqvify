@@ -10,7 +10,7 @@ Change "aqvify" and "aqvify_hass" in all files and direcory names to appropriate
 
 _Work in progress_
 
-This is the core version of Aqvify integration taht is pending review by HA team. This package is a copy of the core integration to simplify testing by non-developers.
+This is the core version of Aqvify integration that is pending review by HA team. This package is a copy of the core integration to simplify testing by non-developers.
 
 ## Installation
 

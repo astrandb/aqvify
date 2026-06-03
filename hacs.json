@@ -1,6 +1,6 @@
 {
   "name": "aqvify",
-  "homeassistant": "2026.6.0",
+  "homeassistant": "2026.5.0",
   "iot_class": ["Cloud Poll"],
   "zip_release": true,
   "filename": "aqvify.zip",

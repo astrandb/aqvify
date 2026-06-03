@@ -1,51 +1,40 @@
-# hass_cc_template
+# aqvify_hass
 
 Template repository for Home Assistant Custom Component
 
-Change "hass_template" and "hass_cc_template" in all files and direcory names to appropriate name
+Change "aqvify" and "aqvify_hass" in all files and direcory names to appropriate name
 
-[![hass_template](https://img.shields.io/github/v/release/astrandb/hass_cc_template)](https://github.com/astrandb/hass_cc_template/releases/latest) [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration) ![Validate with hassfest](https://github.com/astrandb/hass_cc_template/workflows/Validate%20with%20hassfest/badge.svg) ![Maintenance](https://img.shields.io/maintenance/yes/2022.svg) [![hass_template_downloads](https://img.shields.io/github/downloads/astrandb/hass_cc_template/total)](https://github.com/astrandb/hass_cc_template)
+[![aqvify](https://img.shields.io/github/v/release/astrandb/aqvify_hass)](https://github.com/astrandb/aqvify_hass/releases/latest) [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration) ![Validate with hassfest](https://github.com/astrandb/aqvify_hass/workflows/Validate%20with%20hassfest/badge.svg) ![Maintenance](https://img.shields.io/maintenance/yes/2026.svg) [![aqvify_downloads](https://img.shields.io/github/downloads/astrandb/aqvify_hass/total)](https://github.com/astrandb/aqvify_hass)
 
-# hass_template Integration for Home Assistant
+# Aqvify Integration for Home Assistant
 
 _Work in progress_
 
-Known limitations: There is only limited error and exception handling in this pre-release.
-
-This integration will represent .......
+This is the core version of Aqvify integration taht is pending review by HA team. This package is a copy of the core integration to simplify testing by non-developers.
 
 ## Installation
 
-Make sure you have the credentials available for your account with hass_template cloud.
+Make sure you have the credentials available for your account with Aqvify cloud.
 
 ### Preferred download method
 
-- Use HACS, add this repo as a custom repository and install hass_template integration.
+- Use HACS, add this repo as a custom repository and install Aqvify integration.
 - Restart Home Assistant
 
 ### Manual download method
 
-- Copy all files from custom_components/hass_template in this repo to your config custom_components/hass_template
+- Copy all files from custom_components/aqvify in this repo to your config custom_components/aqvify
 - Restart Home Assistant
 
 ### Setup
 
-Request a client_id and client_secret from the manufacturer and
-enter following lines to `configuration.yaml`
+Goto Integrations->Add and select Aqvify
 
-```yaml
-hass_template:
-  client_id: your_client_id
-  client_secret: your_client_secret
-```
-
-Goto Integrations->Add and select hass_template
-
-Follow instructions to authenticate with hass_template cloud server. Allow full access for Home Assistant client.
+Follow instructions to authenticate with Aqvify cloud server.
 
 ## Disclaimer
 
-The package and its author are not affiliated with hass_template. Use at your own risk.
+The package and its author are not affiliated with Aqvify. Use at your own risk.
 
 ## License
 

@@ -1,9 +1,8 @@
 # Aqvify Integration for Home Assistant
 
-_Work in progress_
+## Snapshot from core integration project
 
 [![aqvify](https://img.shields.io/github/v/release/astrandb/aqvify)](https://github.com/astrandb/aqvify/releases/latest) [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration) ![Validate with hassfest](https://github.com/astrandb/aqvify/workflows/Validate%20with%20hassfest/badge.svg) ![Maintenance](https://img.shields.io/maintenance/yes/2026.svg) [![aqvify_downloads](https://img.shields.io/github/downloads/astrandb/aqvify/total)](https://github.com/astrandb/aqvify)
-
 
 This is the core version of Aqvify integration that is pending review by HA team. This package is a copy of the core integration to simplify testing by non-developers.
 

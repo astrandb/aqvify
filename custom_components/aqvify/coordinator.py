@@ -10,6 +10,7 @@ from pyaqvify import AqvifyAPI, AqvifyDeviceData, AqvifyDevices
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,18 +24,9 @@ type AqvifyConfigEntry = ConfigEntry[AqvifyCoordinator]
 
 
 @dataclass
-class AqvifyDeviceInfo:
-    """Data about the Aqvify device."""
-
-    device_key: str
-    device_name: str
-
-
-@dataclass
 class AqvifyCoordinatorData:
     """Data class for storing coordinator data."""
 
-    account_id: str
     devices: AqvifyDevices
     device_data: dict[str, AqvifyDeviceData]
 
@@ -43,7 +35,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
     """Data update coordinator for Aqvify devices."""
 
     config_entry: AqvifyConfigEntry
-    device_info: AqvifyDeviceInfo
 
     def __init__(self, hass: HomeAssistant, entry: AqvifyConfigEntry) -> None:
         """Initialize the Aqvify data update coordinator."""
@@ -59,40 +50,66 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             entry.data[CONF_API_KEY], websession=async_get_clientsession(hass)
         )
 
-    # async def _async_setup(self) -> None:
-    #     try:
-    #         tank_data = await self.api_client.async_get_tank_data()
-    #     except ClientResponseError as err:
-    #         raise UpdateFailed("Could not fetch device info") from err
-    #     self.device_info = CentriConnectDeviceInfo(
-    #         device_key=tank_data.device_key,
-    #         device_name=tank_data.device_name,
-    #         hardware_version=tank_data.hardware_version,
-    #         lte_version=tank_data.lte_version,
-    #         tank_size=tank_data.tank_size,
-    #         tank_size_unit=tank_data.tank_size_unit,
-    #     )
-
     async def _async_update_data(self) -> AqvifyCoordinatorData:
         """Fetch device state."""
         try:
-            _data = await self.api_client.async_get_devices()
-            devices = AqvifyDevices(_data)
+            devices = await self.api_client.async_get_devices()
         except ClientResponseError as err:
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
+            if err.status == 401:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                ) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                    "error": str(err),
+                },
+            ) from err
         except TimeoutError as err:
-            raise UpdateFailed(f"Unexpected response: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_timeout",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                    "error": str(err),
+                },
+            ) from err
 
         device_data = {}
-        try:
-            device_key = "AQ20282"
-            _data = await self.api_client.async_get_device_latest_data(device_key)
-            device_data[device_key] = AqvifyDeviceData(_data)
-        except ClientResponseError as err:
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
-        except TimeoutError as err:
-            raise UpdateFailed(f"Unexpected response: {err}") from err
+        for device in devices.devices.values():
+            try:
+                device_key = str(device.device_key)
+                device_data[
+                    device_key
+                ] = await self.api_client.async_get_device_latest_data(device_key)
+            except ClientResponseError as err:
+                if err.status == 401:
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_api_key",
+                    ) from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={
+                        "entry": self.config_entry.title,
+                        "error": str(err),
+                    },
+                ) from err
+            except TimeoutError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="api_timeout",
+                    translation_placeholders={
+                        "entry": self.config_entry.title,
+                        "error": str(err),
+                    },
+                ) from err
 
         return AqvifyCoordinatorData(
-            account_id="example_account_id", devices=devices, device_data=device_data
+            devices=devices,
+            device_data=device_data,
         )

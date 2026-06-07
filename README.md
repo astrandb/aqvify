@@ -12,7 +12,7 @@ Make sure you have the credentials available for your account with Aqvify cloud.
 
 ### Preferred download method
 
-- Use HACS, add this repo (https://github.com/astrandb/aqvify) as a custom repository and install Aqvify integration.
+- Use HACS, add this repo [https://github.com/astrandb/aqvify]() as a custom repository and install Aqvify integration.
 - Restart Home Assistant
 
 ### Manual download method

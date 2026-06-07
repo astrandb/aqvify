@@ -1,33 +1,56 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "api_key": "API key"
-                },
-                "data_description": {
-                    "api_key": "Your Aqvify API key"
-                },
-                "description": "Navigate to your [Aqvify account]({aqvify_url}), copy your API key, and paste it below."
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful",
+      "unique_id_mismatch": "The entered API key corresponds to a different account."
     },
-    "entity": {
-        "sensor": {
-            "meter_value": {
-                "name": "Meter value"
-            },
-            "water_level": {
-                "name": "Water level"
-            }
-        }
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Your Aqvify API key"
+        },
+        "description": "Reauthentication required. Please enter your updated API key."
+      },
+      "user": {
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Your Aqvify API key"
+        },
+        "description": "Navigate to your [Aqvify account]({aqvify_url}), copy your API key, and paste it below."
+      }
     }
+  },
+  "entity": {
+    "sensor": {
+      "meter_value": {
+        "name": "Meter value"
+      },
+      "water_level": {
+        "name": "Water level"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the Aqvify API for {entry}: {error}"
+    },
+    "api_timeout": {
+      "message": "Timeout occurred while communicating with the Aqvify API for {entry}: {error}"
+    },
+    "invalid_api_key": {
+      "message": "Invalid API key. Please verify your API key and try to reauthenticate."
+    }
+  }
 }

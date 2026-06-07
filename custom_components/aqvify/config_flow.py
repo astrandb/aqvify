@@ -1,15 +1,21 @@
 """Config flow for the Aqvify integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyaqvify import AqvifyAccount, AqvifyAPI, AqvifyAuthException
+from aiohttp import ClientResponseError
+from pyaqvify import AqvifyAPI, AqvifyAuthException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -23,25 +29,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    hub = AqvifyAPI(data[CONF_API_KEY], websession=async_get_clientsession(hass))
-
-    try:
-        data = await hub.async_get_account_id()
-    except AqvifyAuthException as err:
-        raise InvalidAuth from err
-    except Exception as err:
-        raise CannotConnect from err
-
-    account_id = AqvifyAccount(data).account_id
-    return {"title": "Aqvify", "account_id": account_id}
-
-
 class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aqvify."""
 
@@ -53,23 +40,29 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            api_client = AqvifyAPI(
+                user_input[CONF_API_KEY],
+                websession=async_get_clientsession(self.hass),
+            )
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                account_data = await api_client.async_get_account_id()
+            except AqvifyAuthException:
                 errors["base"] = "invalid_auth"
+            except ClientResponseError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    unique_id=info["account_id"], raise_on_progress=True
-                )
-                self._abort_if_unique_id_configured(
-                    updates=user_input, reload_on_update=True
-                )
-                return self.async_create_entry(title=info["title"], data=user_input)
+                await self.async_set_unique_id(account_data.account_id)
+                if self.source == SOURCE_USER:
+                    self._abort_if_unique_id_configured()
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data_updates=user_input
+                    )
+                return self.async_create_entry(title="Aqvify", data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -80,10 +73,53 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+        return await self.async_step_reauth_confirm()
 
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication confirmation."""
+        errors = {}
 
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            api_client = AqvifyAPI(
+                user_input[CONF_API_KEY],
+                websession=async_get_clientsession(self.hass),
+            )
+            try:
+                account_data = await api_client.async_get_account_id()
+            except AqvifyAuthException:
+                errors["base"] = "invalid_auth"
+            except ClientResponseError:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(account_data.account_id)
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
+                    )
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={
+                "aqvify_url": "https://app.aqvify.com/User",
+            },
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """User initiated reconfiguration."""
+        return await self.async_step_user()
